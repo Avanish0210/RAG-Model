@@ -1,4 +1,4 @@
-package com.example.standardRag;
+package com.example.standardRag.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
