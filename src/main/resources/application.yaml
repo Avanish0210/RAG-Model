@@ -1,0 +1,28 @@
+spring:
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: gemma3:1b
+      embedding:
+        options:
+          model: nomic-embed-text:latest
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/ChatBot-db
+    username: user
+    password: chatbot
+    driver-class-name: org.postgresql.Driver
+
+    jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+          format_sql: true
