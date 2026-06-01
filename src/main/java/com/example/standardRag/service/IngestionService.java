@@ -4,6 +4,7 @@ import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.example.standardRag.dto.UploadResponseDto;
 import com.example.standardRag.entity.DocumentEntity;
 import com.example.standardRag.repository.DocumentRepository;
+import com.example.standardRag.repository.HybridSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
@@ -22,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class IngestionService {
     private final DocumentRepository documentRepository;
+    private final HybridSearchRepository hybridSearchRepository;
     private final VectorStore vectorStore;
 
     public UploadResponseDto ingest(MultipartFile file) throws IOException {
@@ -55,6 +57,7 @@ public class IngestionService {
             chunk.getMetadata().put("normalizedName", normalizedName);
         });
         vectorStore.add(chunks);
+        hybridSearchRepository.refreshSearchableText(documentId);
 
         return UploadResponseDto.builder()
                 .documentId(documentId)
