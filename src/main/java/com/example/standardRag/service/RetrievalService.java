@@ -16,7 +16,7 @@ public class RetrievalService {
     private final HybridSearchService hybridSearchService;
 
     public List<Document> retrieve(String documentId, String query) {
-        documentRepository.findByDocumentId(documentId)
+        documentRepository.findByDocumentIdAndActiveTrue(documentId)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
         return hybridSearchService.search(documentId, query, DEFAULT_TOP_K);

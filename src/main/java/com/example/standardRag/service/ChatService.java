@@ -23,6 +23,7 @@ public class ChatService {
 
         List<Document> documents = retrievalService.retrieve(documentId, query);
 
+        //this if statement will reduce Hallucination
         if (documents.isEmpty()) {
             return ChatResponseDto.builder()
                     .answer("I could not find relevant content for this question in the uploaded document.")

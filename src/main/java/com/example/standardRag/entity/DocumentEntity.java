@@ -18,10 +18,12 @@ public class DocumentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(nullable = false)
     private String documentId;
     private String fileName;
     private String normalizedName;
+    private Integer version;
+    private Boolean active;
     private LocalDateTime uploadedAt;
 
 }

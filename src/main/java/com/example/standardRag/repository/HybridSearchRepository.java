@@ -45,6 +45,17 @@ public class HybridSearchRepository {
         );
     }
 
+    public void deleteChunksExceptVersion(String documentId, Integer version) {
+        jdbcTemplate.update("""
+                        DELETE FROM vector_store
+                        WHERE metadata ->> 'documentId' = ?
+                          AND coalesce(metadata ->> 'version', '') <> ?
+                        """,
+                documentId,
+                String.valueOf(version)
+        );
+    }
+
     public void ensureSearchableTextColumn() {
         jdbcTemplate.execute("ALTER TABLE vector_store ADD COLUMN IF NOT EXISTS searchable_text tsvector");
         jdbcTemplate.execute("""
