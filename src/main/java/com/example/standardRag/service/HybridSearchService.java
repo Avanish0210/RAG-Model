@@ -20,22 +20,22 @@ public class HybridSearchService {
     private final VectorStore vectorStore;
     private final HybridSearchRepository hybridSearchRepository;
 
-    public List<Document> search(String documentId, String query, int topK) {
+    public List<Document> search(String documentId, String userId, String query, int topK) {
         int candidateLimit = Math.max(topK * 3, topK);
 
-        List<Document> vectorResults = vectorSearch(documentId, query, candidateLimit);
-        List<Document> keywordResults = hybridSearchRepository.keywordSearch(documentId, query, candidateLimit);
+        List<Document> vectorResults = vectorSearch(documentId, userId, query, candidateLimit);
+        List<Document> keywordResults = hybridSearchRepository.keywordSearch(documentId, userId, query, candidateLimit);
 
         return reciprocalRankFusion(vectorResults, keywordResults, topK);
     }
 
-    private List<Document> vectorSearch(String documentId, String query, int limit) {
+    private List<Document> vectorSearch(String documentId, String userId, String query, int limit) {
         return vectorStore.similaritySearch(
                 SearchRequest.builder()
                         .query(query)
                         .topK(limit)
                         .similarityThresholdAll()
-                        .filterExpression("documentId == '" + escapeFilterValue(documentId) + "'")
+                        .filterExpression("documentId == '" + escapeFilterValue(documentId) + "' && userId == '" + escapeFilterValue(userId) + "' && active == true")
                         .build()
         );
     }

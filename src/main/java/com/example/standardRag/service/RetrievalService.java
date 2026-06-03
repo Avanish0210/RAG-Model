@@ -1,6 +1,7 @@
 package com.example.standardRag.service;
 
 import com.example.standardRag.repository.DocumentRepository;
+import com.example.standardRag.security.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Service;
@@ -14,11 +15,13 @@ public class RetrievalService {
 
     private final DocumentRepository documentRepository;
     private final HybridSearchService hybridSearchService;
+    private final AuthUtil authUtil;
 
     public List<Document> retrieve(String documentId, String query) {
-        documentRepository.findByDocumentIdAndActiveTrue(documentId)
+        String userId = authUtil.getCurrentUserId().toString();
+        documentRepository.findByDocumentIdAndUserIdAndActiveTrue(documentId, userId)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
-        return hybridSearchService.search(documentId, query, DEFAULT_TOP_K);
+        return hybridSearchService.search(documentId, userId, query, DEFAULT_TOP_K);
     }
 }

@@ -5,6 +5,7 @@ import com.example.standardRag.dto.UploadResponseDto;
 import com.example.standardRag.entity.DocumentEntity;
 import com.example.standardRag.repository.DocumentRepository;
 import com.example.standardRag.repository.HybridSearchRepository;
+import com.example.standardRag.security.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
@@ -26,9 +27,11 @@ public class IngestionService {
     private final DocumentRepository documentRepository;
     private final HybridSearchRepository hybridSearchRepository;
     private final VectorStore vectorStore;
+    private final AuthUtil authUtil;
 
     @Transactional
     public UploadResponseDto ingest(MultipartFile file) throws IOException {
+        String userId = authUtil.getCurrentUserId().toString();
         String source = file.getOriginalFilename();
 
         String normalizedName = normalizeDocumentName(source);
@@ -41,6 +44,7 @@ public class IngestionService {
 
         DocumentEntity documentEntity = DocumentEntity.builder()
                 .documentId(documentId)
+                .userId(userId)
                 .fileName(source)
                 .normalizedName(normalizedName)
                 .version(1)
@@ -70,10 +74,11 @@ public class IngestionService {
 
     @Transactional
     public UploadResponseDto update(String documentId, MultipartFile file) throws IOException {
-        DocumentEntity currentDocument = documentRepository.findByDocumentIdAndActiveTrue(documentId)
+        String userId = authUtil.getCurrentUserId().toString();
+        DocumentEntity currentDocument = documentRepository.findByDocumentIdAndUserIdAndActiveTrue(documentId, userId)
                 .orElseThrow(() -> new RuntimeException("Active document not found"));
 
-        int nextVersion = documentRepository.findTopByDocumentIdOrderByVersionDesc(documentId)
+        int nextVersion = documentRepository.findTopByDocumentIdAndUserIdOrderByVersionDesc(documentId, userId)
                 .map(DocumentEntity::getVersion)
                 .filter(version -> version != null)
                 .map(version -> version + 1)
@@ -88,6 +93,7 @@ public class IngestionService {
 
         DocumentEntity newDocument = DocumentEntity.builder()
                 .documentId(documentId)
+                .userId(userId)
                 .fileName(source)
                 .normalizedName(normalizedName)
                 .version(nextVersion)
@@ -98,7 +104,7 @@ public class IngestionService {
         documentRepository.save(newDocument);
 
         ingestChunks(file, newDocument);
-        hybridSearchRepository.deleteChunksExceptVersion(documentId, nextVersion);
+        hybridSearchRepository.deleteChunksExceptVersion(documentId, userId, nextVersion);
 
         return UploadResponseDto.builder()
                 .documentId(documentId)
@@ -116,6 +122,7 @@ public class IngestionService {
 
         chunks.forEach(chunk -> {
             chunk.getMetadata().put("documentId", documentEntity.getDocumentId());
+            chunk.getMetadata().put("userId", documentEntity.getUserId());
             chunk.getMetadata().put("source", documentEntity.getFileName());
             chunk.getMetadata().put("normalizedName", documentEntity.getNormalizedName());
             chunk.getMetadata().put("version", documentEntity.getVersion());
@@ -123,6 +130,6 @@ public class IngestionService {
         });
 
         vectorStore.add(chunks);
-        hybridSearchRepository.refreshSearchableText(documentEntity.getDocumentId());
+        hybridSearchRepository.refreshSearchableText(documentEntity.getDocumentId(), documentEntity.getUserId());
     }
 }

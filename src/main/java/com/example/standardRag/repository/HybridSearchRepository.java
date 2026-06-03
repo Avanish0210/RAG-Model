@@ -31,7 +31,7 @@ public class HybridSearchRepository {
                 .build();
     }
 
-    public void refreshSearchableText(String documentId) {
+    public void refreshSearchableText(String documentId, String userId) {
         ensureSearchableTextColumn();
         jdbcTemplate.update("""
                         UPDATE vector_store
@@ -40,18 +40,22 @@ public class HybridSearchRepository {
                             lower(regexp_replace(coalesce(content, ''), '\\s+', ' ', 'g'))
                         )
                         WHERE metadata ->> 'documentId' = ?
+                          AND metadata ->> 'userId' = ?
                         """,
-                documentId
+                documentId,
+                userId
         );
     }
 
-    public void deleteChunksExceptVersion(String documentId, Integer version) {
+    public void deleteChunksExceptVersion(String documentId, String userId, Integer version) {
         jdbcTemplate.update("""
                         DELETE FROM vector_store
                         WHERE metadata ->> 'documentId' = ?
+                          AND metadata ->> 'userId' = ?
                           AND coalesce(metadata ->> 'version', '') <> ?
                         """,
                 documentId,
+                userId,
                 String.valueOf(version)
         );
     }
@@ -91,7 +95,7 @@ public class HybridSearchRepository {
                 """);
     }
 
-    public List<Document> keywordSearch(String documentId, String query, int limit) {
+    public List<Document> keywordSearch(String documentId, String userId, String query, int limit) {
         ensureSearchableTextColumn();
         String normalizedQuery = normalizeQuery(query);
         if (normalizedQuery.isBlank()) {
@@ -108,6 +112,8 @@ public class HybridSearchRepository {
                                ) AS score
                         FROM vector_store
                         WHERE metadata ->> 'documentId' = ?
+                          AND metadata ->> 'userId' = ?
+                          AND metadata ->> 'active' = 'true'
                           AND searchable_text @@ plainto_tsquery('english', ?)
                         ORDER BY score DESC
                         LIMIT ?
@@ -115,6 +121,7 @@ public class HybridSearchRepository {
                 documentRowMapper,
                 normalizedQuery,
                 documentId,
+                userId,
                 normalizedQuery,
                 limit
         );

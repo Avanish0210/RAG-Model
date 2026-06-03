@@ -20,6 +20,8 @@ public class DocumentEntity {
 
     @Column(nullable = false)
     private String documentId;
+    @Column(nullable = false)
+    private String userId;
     private String fileName;
     private String normalizedName;
     private Integer version;
