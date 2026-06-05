@@ -7,6 +7,7 @@
 ![Ollama](https://img.shields.io/badge/Ollama-Local_LLM-black?style=for-the-badge)
 
 > A production-grade **Retrieval-Augmented Generation (RAG)** backend that lets users upload PDFs and query them using a **fully local LLM** — no OpenAI, no external APIs, no data leaves your machine.
+> Demo VDO-> https://drive.google.com/file/d/1vOUqO6QcGsyEeatE_bsjjG7kziBoaxNH/view?usp=sharing
 
 ---
 
