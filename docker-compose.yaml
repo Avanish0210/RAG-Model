@@ -1,0 +1,57 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: RAG-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: chatbot_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: chatbot
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d chatbot_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: RAG-ollama
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # If you have an NVIDIA GPU, uncomment the lines below to enable GPU acceleration in Docker
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: RAG-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATASOURCE_URL=jdbc:postgresql://db:5432/chatbot_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=chatbot
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - JWT_SECRET=hendbajnendaoienfiaena9n3i3i9jina093je09isk093jmw90j3rjom3o9kaj903je9j3mrn9amsj39aje093jrma9o30
+
+volumes:
+  pgdata:
+  ollama_data:
