@@ -90,7 +90,7 @@ http://localhost:8080
 
 ```bash
 # Pull from Docker Hub
-docker pull  avanish0210/standardrag:latest
+docker pull avanish0210/standardrag:latest
 
 # Run with docker compose
 docker compose up -d
