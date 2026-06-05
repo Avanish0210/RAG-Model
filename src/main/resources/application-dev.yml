@@ -14,7 +14,7 @@ spring:
         initialize-schema: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/ChatBot-db
+    url: jdbc:postgresql://localhost:5433/chatbot_db
     username: user
     password: chatbot
     driver-class-name: org.postgresql.Driver
